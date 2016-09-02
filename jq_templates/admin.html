@@ -1,0 +1,36 @@
+<div class="ui-corner-all custom-corners">
+    <div class="ui-bar ui-bar-b">
+        <h3>Password Entries</h3>
+    </div>
+    <div class="ui-body ui-body-a">
+        <a class="ui-btn ui-icon-plus ui-btn-icon-right" onclick='{{create_action}}'>{{create_label}}</a>
+        <h3>Logins</h3>
+
+        <div class="bordered-simple">
+            <table class="bordered-simple">
+                <thead>
+                <tr class="bordered-simple">
+                    <td>Email</td>
+                    <td>Last Login</td>
+                    <td>Num Logins</td>
+                </tr>
+                </thead>
+
+                {% for entry in logins %}
+                <tr>
+                    <td>
+                        {{ entry.user.email() }}
+                    </td>
+                    <td>
+                        {{ entry.last_login }}
+                    </td>
+                    <td>
+                        {{ entry.num_logins }}
+                    </td>
+                </tr>
+                {% endfor %}
+                <table>
+        </div>
+    </div>
+</div>
+

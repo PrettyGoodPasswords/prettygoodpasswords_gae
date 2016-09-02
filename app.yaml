@@ -1,0 +1,44 @@
+application: prettygoodpasswords-777
+version: 2
+runtime: python27
+api_version: 1
+threadsafe: false
+
+# [START handlers]
+handlers:
+- url: /favicon\.ico
+  static_files: favicon.ico
+  upload: favicon\.ico
+
+- url: /apple-touch-icon.png
+  static_files: apple-touch-icon.png
+  upload: apple-touch-icon.png
+
+- url: /bootstrap
+  static_dir: bootstrap
+
+- url: /assets
+  static_dir: assets
+
+- url: /admin
+  script: main.app
+  login: admin
+
+- url: /migrate
+  script: main.app
+  login: admin
+
+- url: /.*
+  script: main.app
+  secure: always
+# [END handlers]
+
+# [START libraries]
+libraries:
+- name: webapp2
+  version: latest
+- name: jinja2
+  version: latest
+- name: pycrypto
+  version: latest
+# [END libraries]

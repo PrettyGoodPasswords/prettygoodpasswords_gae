@@ -1,0 +1,31 @@
+<div class="container">
+    <div class="panel panel-default">
+        <div class="panel-heading"><strong>Upload CSV Files</strong></div>
+        <div class="panel-body">
+
+            <li> Create a comma seperated file with your password data.</li>
+            <li>A program like Excel or OpenOffice can help edit this file.</li>
+            <li>The first row should be the header. It should consist of 3 or optionally 4 columns. Like:</li>
+            <ul>
+                <li><b>site,username,password,notes</b></li>
+                <li>or</li>
+                <li><b>site,username,password</b></li>
+            </ul>
+            <li>Each line of the comma seperated file should have the same number of columns as the header.</li>
+            <li> After import, the file is deleted from the server. All entries are stored fully encrypted.</li>
+            <hr/>
+            <!-- Standar Form -->
+            <h4>Select a file from your computer</h4>
+            <form action="{{ form_action }}" method="post" enctype="multipart/form-data" id="js-upload-form">
+                <div class="form-inline">
+                    <div class="form-group">
+                        <input type="file" name="files[]" id="js-upload-files" multiple>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary" id="js-upload-submit">Upload file</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+

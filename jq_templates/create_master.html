@@ -1,0 +1,50 @@
+<div class="ui-corner-all custom-corners">
+    <div class="ui-bar ui-bar-b">
+        <h3>Create New Account</h3>
+    </div>
+    <div class="ui-body ui-body-a">
+        <p class="warning-text"><b>{{ err }}</b></p>
+        <p>
+            Please create a strong master password.</p>
+        <p class="detail-text"> This will protect access to all your passwords. It must score a
+            {{MIN_MASTER_PASS_STRENGTH}} or higher on our strength test.
+        </p>
+        <form align="center" class="form-horizontal" id="initMasterPass" action="JavaScript:init_master_pass()">
+
+            <div class="centered">
+                <label for="password" class="cols-sm-2 control-label">Master Password</label>
+                <input type="password" onchange='test_pass_strength("#initMasterPass")' class="form-control"
+                       name="password" id="password" placeholder="Enter Password"/>
+                <input type="password" class="form-control" name="password_repeat" id="password_repeat"
+                       placeholder="Repeat Password"/>
+            </div>
+
+            <div id="strength_icon">
+                <a onclick='test_pass_strength("#initMasterPass");'
+                   class="ui-btn ui-mini ui-icon-info ui-btn-icon-left">How strong is my password?</a>
+            </div>
+
+
+            <p class="detail-text">To create an account must agree to the terms of service.</p>
+            <div class="checkbox">
+                <lable><input type="checkbox" name="agree" id="agree">I agree.</lable>
+            </div>
+            <a onclick='ajax_load("/terms");' class="ui-btn ui-mini">Terms of Service</a>
+
+            <div class="form-group ">
+                <button type="submit" class="ui-btn">Create New Account</button>
+            </div>
+
+        </form>
+        <hr>
+
+    </div>
+    <div id="strength_meter">
+        <p>How strong is my password?</p>
+    </div>
+</div>
+
+</div>
+
+</div>
+

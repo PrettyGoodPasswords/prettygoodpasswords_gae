@@ -1,0 +1,52 @@
+  <div class="col-md-10 col-md-offset-1">
+        <h3>User Data</h3>
+        <table class="table table-bordered">
+          <thead>
+            <tr>                       
+                <th>Field</th> 
+                <th>Data</th>                         
+            </tr> 
+          </thead>
+          <tbody>
+          <tr><td>Master Hash Method</td><td> {{ account.master_hash_method }}</td></tr>
+              <tr><td>Master Password Hash</td><td> {{ account.master_hash }}</td></tr>
+              <tr><td>Master Password Hash Cost</td><td> {{ account.master_hash_cost }}</td></tr>
+                <tr><td>Master Password Hash Salt</td><td> {{ account.master_hash_salt }}</td></tr>
+
+                <tr><td>Key Generation Method</td><td> {{ account.key_hash_method }}</td></tr>
+              <tr><td>Key Generation Cost</td><td> {{ account.key_hash_cost }}</td></tr>
+                <tr><td>Key Generation Salt</td><td> {{ account.key_hash_salt }}</td></tr>
+
+              <tr><td>Number Failed Attempts</td><td> {{ account.number_failed_attempts }}</td></tr>
+              <tr><td>Account Lock Hash</td><td> {{ account.account_lock_hash }}</td></tr>
+              <tr><td>  </td><td>  </td></tr>
+              <tr><td>Number Logins</td><td> {{ login.num_logins }}</td></tr>
+              <tr><td>Last Login</td><td> {{ login.last_login }}</td></tr>
+              <tr><td>User</td><td> {{ login.user.email() }}</td></tr>
+              <tr><td>  </td><td>  </td></tr>
+          </tbody>
+        </table>
+
+      <hr />
+
+    <h3>Password Data</h3>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+            <th>Field</th>
+            <th>Data</th>
+        </tr>
+      </thead>
+      <tbody>
+            {% for entry in entries %}
+                <tr><td>site</td><td> {{ entry.site }}</td></tr>
+                <tr><td>username</td><td> {{ entry.username }}</td></tr>
+                <tr><td>password</td><td> {{ entry.password }}</td></tr>
+                <tr><td>notes</td><td> {{ entry.notes }}</td></tr>
+                <tr><td>  </td><td>  </td></tr>
+              {% endfor %}
+            </tbody>
+    </table>
+</div>
+
+

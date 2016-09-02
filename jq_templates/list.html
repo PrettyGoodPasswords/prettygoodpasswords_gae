@@ -1,0 +1,20 @@
+<div class="ui-corner-all custom-corners">
+    <div class="ui-bar ui-bar-b">
+        <h3>Password Entries</h3>
+    </div>
+    <div class="ui-body ui-body-a no-border">
+        {%- if create_action -%}
+        <a class="ui-btn ui-icon-plus ui-btn-icon-right" onclick='{{create_action}}'>{{create_label}}</a>
+        {%- endif -%}
+
+        <h3>{{header}}</h3>
+
+        <div class="no-outline">
+            {% for entry in entries %}
+            <a class="ui-btn ui-icon-carat-r ui-btn-icon-right" href="#"
+               onclick='ajax_load("/view?key={{ entry.key.id() }}");'>{{ entry.site }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+

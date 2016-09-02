@@ -1,0 +1,33 @@
+<div class="ui-corner-all custom-corners">
+    <div class="ui-bar ui-bar-b">
+        <h3>Tools</h3>
+    </div>
+    <div class="ui-body ui-body-a no-border">
+        <p class="detail-text"> Tell me about how this works.</p>
+        <a href="#" onclick="ajax_load('/about')" class="ui-shadow ui-btn ui-corner ui-mini">About</a>
+        <p class="detail-text">Help keep the lights on.</p>
+        <a href="#" onclick="ajax_load('/donate')" class="ui-shadow ui-btn ui-corner ui-mini">Donate</a>
+        <p class="detail-text">Let's get some of my previous passwords.</p>
+        <a href="#" onclick="ajax_load('/import')" class="ui-shadow ui-btn ui-corner ui-mini">Import</a>
+        <p class="detail-text">Let's save out all my passwords.</p>
+        <a href="/export" class="ui-shadow ui-btn ui-corner ui-mini">Export</a>
+        <p class="detail-text"> View all data in the raw that we store for your account.</p>
+        <a href="#" onclick="ajax_load('/raw')" class="ui-shadow ui-btn ui-corner ui-mini">View Raw</a>
+        <p class="detail-text"> Change the master password.</p>
+        <a href="#" onclick="ajax_load('/change_master_form')" class="ui-shadow ui-btn ui-corner ui-mini">Change Master
+            Pass</a>
+        {%- if admin == 1 -%}
+        <p class="detail-text"> Admin.</p>
+        <a href="#" onclick="ajax_load('/admin')" class="ui-shadow ui-btn ui-corner ui-mini">Admin</a>
+        {%- endif -%}
+    </div>
+    <div class="ui-bar ui-bar-b">
+        <h3>Destroy All Passwords</h3>
+    </div>
+    <div class="ui-body ui-body-a">
+        <p class="detail-text"> Remove all password data and wipe master password.</p>
+        <a href="#" onclick="ajax_load('/clean_confirm')" class="ui-shadow ui-btn ui-corner ui-mini">Wipe Data</a>
+    </div>
+    <hr/>
+    <p> Please <a href="mailto:{{APP_EMAIL_HELP}}"/>email PGP Help</a> if you have any questions or comments.</p>
+</div>

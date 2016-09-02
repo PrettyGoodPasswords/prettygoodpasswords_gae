@@ -1,0 +1,50 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="panel panel-default panel-table">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col col-xs-6">
+                            <h3 class="panel-title">Tools</h3>
+                        </div>
+                    </div>
+                </div>
+                <div align="center">
+                    <div class="ui-body ui-body-a">
+                        <p>Help keep the lights on.</p>
+                        <a onclick="ajax_load('/donate')" class="btn btn-lg btn-primary">Donate</a>
+                        <hr>
+                        <p>Read password data from a comma seperated file.</p>
+                        <a onclick="ajax_load('/import')" class="btn btn-lg btn-primary">Import</a>
+                        <hr>
+                        <p>Save password data into a comma seperated file.</p>
+                        <a href="/export" class="btn btn-lg btn-primary">Export</a>
+                        <hr>
+                        <p> View all data in the raw that we store for your account.</p>
+                        <a onclick="ajax_load('/raw')" class="btn btn-lg btn-primary">View Raw</a>
+                        <hr>
+                        <p> Change the master password.</p>
+                        <a onclick="ajax_load('/change_master_form')" class="btn btn-lg btn-primary">Change Master
+                            Pass</a>
+                        {%- if admin == 1 -%}
+                        <hr>
+                        <p class="detail-text"> Admin.</p>
+                        <a href="#" onclick="ajax_load('/admin')" class="btn btn-lg btn-primary">Admin</a>
+                        {%- endif -%}
+                    </div>
+                    <hr>
+                    <div class="ui-bar ui-bar-b">
+                        <h3>Destroy All Passwords</h3>
+                    </div>
+                    <div class="ui-body ui-body-a">
+                        <p> This will irrevesibly remove all password data and wipe master password.</p>
+                        <a onclick="ajax_load('/clean_confirm')" class="btn btn-lg btn-primary">Clean</a>
+                    </div>
+                    <hr/>
+                    <p> Please <a href="mailto:{{APP_EMAIL_HELP}}"/>email PGP Help</a> if you have any questions or
+                        comments.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

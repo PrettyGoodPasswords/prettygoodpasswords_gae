@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Cache-Control: no-store"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Pragma: no-cache"/>
+    <meta http-equiv="Expires" content="-1"/>
+
+    <link rel="stylesheet" href="assets/css/jqm-demos.css">
+    <link rel="stylesheet" href="assets/css/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="assets/css/main-mobile.css">
+    <link rel="stylesheet" href="assets/css/progress-meter.css">
+    <link rel="stylesheet" href="assets/css/jQMProgressBar.css"/>
+    <script src="assets/js/jquery.js"></script>
+
+    <!-- This jquery mobile has a bad bug somewhere that causes the page div not to size correctly
+    after a page redirect. Unfortunately, that's a common first use-case when a user logs in
+    from Google. So that was a deal killer. But by just manually replacing the css styles
+    that that script applies, I was able to salvage most of the functionality without the killer
+    refresh bug. Tawn: Aug-25-2016 ->
+   <!-- <script src="assets/js/jquery.mobile-1.4.5.js"></script> -->
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/jquery.form.js"></script>
+    <script src="assets/js/jQMProgressBar.js"></script>
+
+    <script type="text/javascript">
+        var idleTime = 0;
+        var idleInterval = null;
+        idleLogoutSeconds = 60 * 3; //3 minutes on mobile.
+        $(document).ready(function () {
+            //Increment the idle time counter every second.
+            idleInterval = setInterval(timerIncrement, 1000); // 1 second
+
+            //Zero the idle timer on mouse movement.
+            $(this).mousemove(function (e) {
+                idleTime = 0;
+            });
+            $(this).keypress(function (e) {
+                idleTime = 0;
+            });
+        });
+
+        function timerIncrement() {
+            idleTime = idleTime + 1;
+           if (idleTime > idleLogoutSeconds && isLoggedIn) { // seconds
+                idleTime = 0
+                ajax_load('/end');
+            }
+        }
+
+    </script>
+
+    <title>Passwords</title>
+</head>
+<body>
+<div data-cache="false" class="ui-page-theme-a ui-page-active">
+    <div class="jqm-header ui-header ui-bar-inherit">
+        <div class="ui-navbar">
+            <ul class="ui-grid-c" id="navbar_logged_in" name="navbar_logged_in" style="display: none">
+                <li class="ui-block-a"><a onclick='ajax_load("/master");' href="#"
+                                          class="ui-btn ui-btn-a ui-icon-home ui-btn-icon-top" data-icon="home">Home</a>
+                </li>
+                <li class="ui-block-b"><a onclick='ajax_load("/end");'
+                                          class="ui-btn ui-btn-a ui-icon-eye ui-btn-icon-top" data-icon="eye" href="#">Logout</a>
+                </li>
+                <li class="ui-block-c"><a onclick='ajax_load("/search_form");' href="#"
+                                          class="ui-btn ui-btn-a ui-icon-search ui-btn-icon-top" data-icon="search">Search</a>
+                </li>
+                <li class="ui-block-d"><a onclick='ajax_load("/tools");' href="#"
+                                          class="ui-btn ui-btn-a ui-icon-gear ui-btn-icon-top"
+                                          data-icon="gear">Tools</a></li>
+            </ul>
+
+            <ul class="ui-grid-a" id="navbar_logged_out" name="navbar_logged_out">
+                <li class="ui-block-a"><a onclick='ajax_load("/master");' href="#"
+                                          class="ui-btn ui-btn-a ui-icon-home ui-btn-icon-top">Pretty Good Passwords</a>
+                </li>
+                <li class="ui-block-b"><a onclick='ajax_load("/about");' href="#"
+                                          class="ui-btn ui-btn-a ui-icon-info ui-btn-icon-top">About</a></li>
+            </ul>
+
+        </div>
+    </div>
+
+    <div class="centered white-bg padded" id="wait_indicator" style="display: none">
+        <img src="/assets/images/animatedEllipse.gif"/>
+        <p>PGP uses a password hash with a large work value. This can take 10+ secs to complete.</p>
+    </div>
+
+    <div data-cache="false" id="main">
+        <script type="text/javascript">
+          on_main_init();
+
+        </script>
+    </div>
+</div>
+</body>

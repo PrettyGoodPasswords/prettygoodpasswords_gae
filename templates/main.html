@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Cache-Control: no-store"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Pragma: no-cache"/>
+    <meta http-equiv="Expires" content="-1"/>
+
+    <!-- [START css] -->
+    <link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Website Font style -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="assets/css/main.css"/>
+    <link rel="stylesheet" href="assets/css/progress-meter.css"/>
+
+    <!-- Google Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
+    <!-- [END css] -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
+    <script src="assets/js/jquery.form.js"></script>
+
+    <link type="text/javascript" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js">
+    <script src="assets/js/main.js"></script>
+
+    <script type="text/javascript">
+        var idleTime = 0;
+        var idleInterval = null;
+        idleLogoutSeconds = 60 * 3; //3 minutes on desktop.
+        $(document).ready(function () {
+            //Increment the idle time counter every second.
+            idleInterval = setInterval(timerIncrement, 1000); // 1 second
+
+            //Zero the idle timer on mouse movement.
+            $(this).mousemove(function (e) {
+                idleTime = 0;
+            });
+            $(this).keypress(function (e) {
+                idleTime = 0;
+            });
+        });
+
+        function timerIncrement() {
+            idleTime = idleTime + 1;
+            if (idleTime > idleLogoutSeconds && isLoggedIn) { // seconds
+                idleTime = 0
+                ajax_load('/end');                
+            }
+        }
+
+    </script>
+
+    <title>Passwords</title>
+</head>
+<body>
+
+<nav class="navbar navbar-default" role="navigation">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+        <a class="navbar-brand" href="/">Pretty Good Passwords</a>
+    </div>
+
+    <div id="navbar_logged_in" name="navbar_logged_in" style="display: none">
+        <ul class="nav navbar-nav">
+            <li><a onclick='ajax_load("/end");' class="btn">Logout</a></li>
+            <li><a onclick='ajax_load("/tools");' class="btn">Tools</a></li>
+        </ul>
+        <div class="col-sm-3 col-md-3">
+            <form id="search_form" class="navbar-form" role="search" action="JavaScript:search_list()">
+                <div class="input-group">
+                    <input id="query" type="text" class="form-control" placeholder="Search" name="query">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+            <li><a onclick='ajax_load("/about");' class="btn">About</a></li>
+            <li>hi</li>
+        </ul>
+    </div>
+
+    <div id="navbar_logged_out" name="navbar_logged_out">
+        <ul class="nav navbar-nav navbar-right">
+            <li><a onclick='ajax_load("/about");' class="btn">About</a></li>
+            <li>hi</li>
+        </ul>
+    </div>
+
+
+</nav>
+
+<div class="centered" id="wait_indicator" style="display: none">
+    <div class="panel panel-default panel-table">
+        <img class="padded" src="/assets/images/animatedEllipse.gif"/>
+        <p>PGP uses a password hash with a large work value. This can take 10+ secs to complete.</p>
+    </div>
+</div>
+
+<div id="main">
+    <script type="text/javascript">
+        on_main_init();
+
+    </script>
+</div>
+
+<div class="navbar navbar-default navbar-fixed-bottom">
+    <div class="container">
+        <p class="navbar-text pull-left">© 2016 - Built on Google AppEngine
+        </p>
+
+        <a onclick='ajax_load("/terms");' class="navbar-btn btn-default btn pull-right">Terms</a>
+
+    </div>
+</div>
+</body>

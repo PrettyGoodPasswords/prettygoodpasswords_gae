@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Cache-Control: no-store"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Pragma: no-cache"/>
+    <meta http-equiv="Expires" content="-1"/>
+
+    <link rel="stylesheet" href="assets/css/jqm-demos.css">
+    <link rel="stylesheet" href="assets/css/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="assets/css/main-mobile.css">
+    <link rel="stylesheet" href="assets/css/progress-meter.css">
+    <link rel="stylesheet" href="assets/css/jQMProgressBar.css"/>
+    <script src="assets/js/jquery.js"></script>
+
+    <!-- This jquery mobile has a bad bug somewhere that causes the page div not to size correctly
+    after a page redirect. Unfortunately, that's a common first use-case when a user logs in
+    from Google. So that was a deal killer. But by just manually replacing the css styles
+    that that script applies, I was able to salvage most of the functionality without the killer
+    refresh bug. Tawn: Aug-25-2016 ->
+   <!-- <script src="assets/js/jquery.mobile-1.4.5.js"></script> -->
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/jquery.form.js"></script>
+    <script src="assets/js/jQMProgressBar.js"></script>
+
+
+    <title>Thanks</title>
+</head>
+<body>
+<div data-cache="false" class="ui-page-theme-a ui-page-active">
+    <div class="jqm-header ui-header ui-bar-inherit">
+        <div class="ui-navbar">
+            <ul class="ui-grid-a" id="navbar_logged_out" name="navbar_logged_out">
+                <li class="ui-block-a"><a href="/" class="ui-btn ui-btn-a ui-icon-home ui-btn-icon-top">Pretty Good
+                    Passwords</a></li>
+            </ul>
+
+        </div>
+    </div>
+
+    <p>
+        Thanks for your donation!
+    </p>
+    <p> Please <a href="mailto:{{APP_EMAIL_HELP}}"/>email PGP Help</a> if you have any questions or comments.</p>
+
+    <a class="ui-btn" href="/">Home</a>
+
+</div>
+</body>

@@ -1,0 +1,82 @@
+<!-- Sidebar -->
+<div id="sidebar-wrapper">
+    <div class="sidebar-nav">
+        <div class="padded-sm" id="strength_meter">
+            <p>How strong is my password?</p>
+            <a onclick='test_pass_strength("#editEntryForm");' class="btn btn-primary btn-sm btn-block">Check
+                Password</a>
+        </div>
+    </div>
+</div>
+<!-- /#sidebar-wrapper -->
+
+
+<div class="container">
+    <div class="row main">
+        <div class="main-login main-center">
+
+            <h2 class="title">Entry</h2>
+            <form class="form-horizontal" id="editEntryForm" action="JavaScript:submit_edit_entry_form()">
+
+                <div class="form-group">
+                    <label for="site" class="cols-sm-2 control-label">Site Name</label>
+                    <div class="cols-sm-10">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-sign-in fa" aria-hidden="true"></i></span>
+                            <input type="text" class="form-control" name="site" id="site" value="{{entry.site}}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="username" class="cols-sm-2 control-label">Username</label>
+                    <div class="cols-sm-10">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-users fa" aria-hidden="true"></i></span>
+                            <input type="text" class="form-control" name="username" id="username"
+                                   value="{{entry.username}}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="cols-sm-2 control-label">Password</label>
+                    <div class="cols-sm-10">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-lock fa-lg" aria-hidden="true"></i></span>
+                            <input type="text" onchange='test_pass_strength("#editEntryForm")' class="form-control"
+                                   name="password" id="password" value="{{entry.password}}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes" class="cols-sm-2 control-label">Notes</label>
+                    <div class="cols-sm-10">
+                        <div class="input-group">
+                            <textarea cols="80" rows="8" class="form-control" name="notes"
+                                      id="notes">{{entry.notes}}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <input type="hidden" name="key" id="key" value="{{entry.key.id()}}"/>
+                    </div>
+                </div>
+
+                <div class="form-group ">
+                    <button type="submit" class="btn btn-primary btn-lg btn-block login-button">Save</button>
+                    <a onclick='generate_password("password");test_pass_strength("#editEntryForm");'
+                       class="btn btn-primary btn-lg btn-block login-button">Generate Password</a>
+                </div>
+            </form>
+        </div>
+        <div class="main-login main-center">
+            <a href="#" onclick='ajax_load("/delete?key={{ entry.key.id() }}");'
+               class="btn btn-primary btn-lg btn-block delete-button">Delete</a>
+        </div>
+    </div>
+</div>
+

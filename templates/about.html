@@ -1,0 +1,76 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="panel panel-default panel-table">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col col-xs-6">
+                            <h3 class="panel-title">About</h3>
+                        </div>
+                    </div>
+                </div>
+                <div align="center">
+                    <p>
+                        PrettyGoodPasswords is a web application using Google App Engine.
+                        Users can read & write password entries safely and securely.
+                        Entries are stored in App Engine (NoSQL) High Replication Datastore (HRD).
+                    </p>
+                    <p>
+                        No data is stored in the clear. We transform your master password with a mathematical hash,
+                        called
+                        PBKDF2, and store the result. Each time you enter your master password, check that the
+                        transformation results in the same value. Thus we don't
+                        save and can't recover your master password. Working backwards to discover your password from
+                        this hash can be difficult. Here's a discussion on
+                        <a href="http://crypto.stackexchange.com/questions/18173/how-long-does-it-take-to-crack-pbkdf2">how
+                            long to brute force PBKDF2.</a>
+                        In general, it can depend on the quality of your master password. We will assist you to create a
+                        strong master password.
+                    </p>
+                    <p><b>But make no mistake, a determined
+                        attacker with ASICs or FPGAs will be able to brute force your password, given access to the
+                        data.</b>
+                        This site is not recommended for those living in an oppressive regime.
+                        Or those who need an advanced level of security.
+                        It is better to choose a solution which manages your cryptographic keys locally.
+                    </p>
+                    <p>How do we protect your stored password entries?
+                        An ephemeral private key is generated from PBKDF2 using the master password+salt and
+                        100000 iterations. PBKDF2, which stands for Password-Based Key Derivation Function, version 2.
+                        If you are curious how it works
+                        you can peruse <a href="http://tools.ietf.org/html/rfc2898#section-5.2">section 5.2 of RFC
+                            2898</a>.
+                        All site, username, password, and note data is AES encoded with that private key.
+                        The key exists transitionally in a secure, server side session and is discarded when the user
+                        logs out
+                        or time expires.
+                    </p>
+                    <p>
+                        This means that there is no facility to recover lost master passwords.
+                        We can not reset your password without loss of all your data.
+                    </p>
+                    <p>
+                        Your account will lock after 5 failed attempts to login. An email will be sent with a special
+                        unlock code. This will slow down illicit entry, and make remote brute forcing your password
+                        intractable.
+                    </p>
+
+                    <p>
+                        You can greatly increase the security of your passwords by adding two factor authentication to
+                        your google account.
+                        Thereafter, you need to do an extra layer of authentication only for new devices.
+                    </p>
+                    <p>
+                        Always take care when accessing this on a public computer. Preferably, do not. And do not use
+                        two factor to authenticate a public device.
+                    </p>
+                    <hr/>
+                    <p> Please <a href="mailto:{{APP_EMAIL_HELP}}"/>email PGP Help</a> if you have any questions or
+                        comments.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
