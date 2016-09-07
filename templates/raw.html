@@ -8,14 +8,16 @@
             </tr> 
           </thead>
           <tbody>
-          <tr><td>Master Hash Method</td><td> {{ account.master_hash_method }}</td></tr>
-              <tr><td>Master Password Hash</td><td> {{ account.master_hash }}</td></tr>
-              <tr><td>Master Password Hash Cost</td><td> {{ account.master_hash_cost }}</td></tr>
+                <tr><td>Master Hash Method</td><td> {{ account.master_hash_method }}</td></tr>
+                <tr><td>Master Password Hash</td><td> {{ account.master_hash }}</td></tr>
+                <tr><td>Master Password Hash Cost</td><td> {{ account.master_hash_cost }}</td></tr>
                 <tr><td>Master Password Hash Salt</td><td> {{ account.master_hash_salt }}</td></tr>
+                <tr><td>Master Password Key Length</td><td> {{ account.master_hash_length }}</td></tr>
 
                 <tr><td>Key Generation Method</td><td> {{ account.key_hash_method }}</td></tr>
-              <tr><td>Key Generation Cost</td><td> {{ account.key_hash_cost }}</td></tr>
+                <tr><td>Key Generation Cost</td><td> {{ account.key_hash_cost }}</td></tr>
                 <tr><td>Key Generation Salt</td><td> {{ account.key_hash_salt }}</td></tr>
+                <tr><td>Key Length</td><td> {{ account.key_hash_length }}</td></tr>
 
               <tr><td>Number Failed Attempts</td><td> {{ account.number_failed_attempts }}</td></tr>
               <tr><td>Account Lock Hash</td><td> {{ account.account_lock_hash }}</td></tr>

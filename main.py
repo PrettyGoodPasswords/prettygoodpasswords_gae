@@ -61,9 +61,11 @@ class Account(ndb.Model):
     master_hash_salt = ndb.StringProperty()
     master_hash_cost = ndb.IntegerProperty()
     master_hash_method = ndb.StringProperty()
+    master_hash_length = ndb.IntegerProperty()
     key_hash_salt = ndb.StringProperty()
     key_hash_cost = ndb.IntegerProperty()
     key_hash_method = ndb.StringProperty()
+    key_hash_length = ndb.IntegerProperty()
     number_failed_attempts = ndb.IntegerProperty()
     account_lock_hash = ndb.StringProperty()
 
@@ -76,6 +78,31 @@ class Login(ndb.Model):
     user = ndb.UserProperty()
     last_login = ndb.StringProperty()
     num_logins = ndb.IntegerProperty()
+
+
+def get_account(user):
+    """
+    :param user: GAE user
+    :return: a single Account object or None
+    """
+    acc_q = Account.gql("WHERE user_id = :1", user_id_hash(user))
+
+    # there must only exist exactly one
+    if acc_q.count() != 1:
+        return None
+
+    # get the single instance
+    acc = acc_q.get()
+
+    # initialize new fields
+    if acc.master_hash_length is None:
+        acc.master_hash_length = 16
+        acc.put()
+    if acc.key_hash_length is None:
+        acc.key_hash_length = 16
+        acc.put()
+
+    return acc
 
 
 def entry_key(id):
@@ -122,7 +149,7 @@ def generate_pbkdf2_hash(acc, passwd):
     :return: nothing, modifies account entry to hold hash values
     """
     acc.master_hash_method = HASH_METHOD_PBKDF2
-    acc.master_hash_cost, acc.master_hash_salt, acc.master_hash = crypt.make_pbkdf2_hash(passwd)
+    acc.master_hash_cost, acc.master_hash_salt, acc.master_hash_length, acc.master_hash = crypt.make_pbkdf2_hash(passwd)
 
 
 def check_master_pass(user, passwd, autoUpgrade=True):
@@ -136,12 +163,13 @@ def check_master_pass(user, passwd, autoUpgrade=True):
     via an account_lock_hash. If not, then hash the
     passwd passed in and verify against stored hash.
     Clear any previous failed attempts on success.
+    if autoUpgrade is True, then accounts will move to change their
+    hashing methods to the latest available.
     """
-    acc_q = Account.gql("WHERE user_id = :1", user_id_hash(user))
-    if acc_q.count() != 1:
+    acc = get_account(user)
+    if acc is None:
         return False
     ret_val = False
-    acc = acc_q.get()
 
     if acc.account_lock_hash is None:
         stored_h = acc.master_hash
@@ -153,7 +181,8 @@ def check_master_pass(user, passwd, autoUpgrade=True):
             check_h = crypt.get_password_hash(passwd)
             ret_val = (stored_h == check_h)
         elif acc.master_hash_method == HASH_METHOD_PBKDF2:
-            ret_val = crypt.check_pbkdf2_hash(passwd, acc.master_hash_cost, acc.master_hash_salt, acc.master_hash)
+            ret_val = crypt.check_pbkdf2_hash(passwd, acc.master_hash_cost, acc.master_hash_salt, acc.master_hash,
+                                              acc.master_hash_length)
 
         if ret_val is True and acc.master_hash_method == HASH_METHOD_SHA512 and autoUpgrade:
             # upgrade hash to HASH_METHOD_PBKDF2
@@ -182,11 +211,10 @@ def attempt_unlock(user, auth):
     and that it matches the value passed in as auth.
     Will reset the hash and failed attempt account on success.
     """
-    acc_q = Account.gql("WHERE user_id = :1", user_id_hash(user))
-    if acc_q.count() != 1:
+    acc = get_account(user)
+    if acc is None:
         return -1
     num_attempts = 0
-    acc = acc_q.get()
     if acc.account_lock_hash is not None and acc.account_lock_hash == auth:
         acc.account_lock_hash = None
         num_attempts = acc.number_failed_attempts
@@ -203,11 +231,10 @@ def has_set_master_pass(user):
 
     Check the master_hash field of Account for that user and make sure it's been set.
     """
-    acc_q = Account.gql("WHERE user_id = :1", user_id_hash(user))
-    print acc_q.count()
-    if acc_q.count() != 1:
+    acc = get_account(user)
+    if acc is None:
         return False
-    return acc_q.get().master_hash != None
+    return acc.master_hash != None
 
 
 def init_key(passwd, acc=None):
@@ -216,7 +243,7 @@ def init_key(passwd, acc=None):
     :return: a string that is suitable for use as a key in ciphers
     """
     acc.key_hash_method = HASH_METHOD_PBKDF2
-    acc.key_hash_cost, acc.key_hash_salt, hash = crypt.make_pbkdf2_hash(passwd)
+    acc.key_hash_cost, acc.key_hash_salt, acc.key_hash_length, hash = crypt.make_pbkdf2_hash(passwd)
     return hash
 
 
@@ -228,9 +255,17 @@ def make_key(passwd, acc=None):
     if acc is None or acc.key_hash_method is None:
         return crypt.generate_key_from_pass(passwd)
     elif acc.key_hash_method == HASH_METHOD_PBKDF2:
-        cost, salt, hash = crypt.make_pbkdf2_hash(passwd, cost=acc.key_hash_cost, salt=acc.key_hash_salt)
+        cost, salt, lenKey, hash = crypt.make_pbkdf2_hash(passwd, cost=acc.key_hash_cost, salt=acc.key_hash_salt,
+                                                          keyLen=acc.key_hash_length)
         return hash
     return crypt.generate_key_from_pass(passwd)
+
+
+def get_cipher(aes_key):
+    # keys longer than 32 hex chars have to be decoded to bin.
+    if len(aes_key) > 32:
+        aes_key = aes_key.decode('hex')
+    return crypt.create_cipher(aes_key)
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -339,7 +374,7 @@ class BaseHandler(webapp2.RequestHandler):
         if not cipher:
             if not aes_key:
                 aes_key = self.get_key()
-            cipher = crypt.create_cipher(aes_key)
+            cipher = get_cipher(aes_key)
         entry.site = crypt.decode(entry.site, cipher)
         entry.username = crypt.decode(entry.username, cipher)
         entry.password = crypt.decode(entry.password, cipher)
@@ -361,7 +396,7 @@ class BaseHandler(webapp2.RequestHandler):
         if not aes_key:
             aes_key = self.get_key()
         if not cipher:
-            cipher = crypt.create_cipher(aes_key)
+            cipher = get_cipher(aes_key)
         entry.site = crypt.encode(entry.site, cipher)
         entry.username = crypt.encode(entry.username, cipher)
         entry.password = crypt.encode(entry.password, cipher)
@@ -378,10 +413,17 @@ class BaseHandler(webapp2.RequestHandler):
         return value.strip()
 
     def view_welcome(self):
+        """
+        render the welcome screen for users that have no account and/or are not logged into google
+        """
         login_url = users.create_login_url("/")
         self.render({"login_url": login_url}, self.template('welcome.html'))
 
     def view_entry(self, key_id):
+        """
+        :param key_id:
+        render the html page to view a password entry
+        """
         entry = entry_key(key_id).get()
         if entry is None:
             entry = Entry()
@@ -395,6 +437,9 @@ class BaseHandler(webapp2.RequestHandler):
         self.render(template_values, self.template('view_entry.html'))
 
     def view_list(self):
+        """
+        render the html page that lists all the password entries
+        """
         if not self.init_user():
             self.redirect("/welcome")
             return
@@ -415,7 +460,7 @@ class BaseHandler(webapp2.RequestHandler):
             self.response.write("Not authorized.")
             return
 
-        cipher = crypt.create_cipher(aes_key)
+        cipher = get_cipher(aes_key)
 
         # just decode the sites for now. That's all we can see in the list
         entry_list = []
@@ -439,10 +484,19 @@ class BaseHandler(webapp2.RequestHandler):
 
 
 class MainPage(BaseHandler):
+    """
+    Handler for main entry point of app /
+    """
+
     def get(self):
         self.render({}, self.template('main.html'))
 
+
 class MasterPassForm(BaseHandler):
+    """
+    Handler to generate form to login with master password
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -460,6 +514,10 @@ class MasterPassForm(BaseHandler):
 
 
 class CheckMasterPass(BaseHandler):
+    """
+    Handler to parse the post from the login form generated in MasterPassForm
+    """
+
     def post(self):
         if not self.init_user():
             self.response.write("/welcome")
@@ -471,14 +529,14 @@ class CheckMasterPass(BaseHandler):
 
         auth = self.request.get('auth')
         if check_master_pass(self.user, auth, autoUpgrade=True):
-            acc_q = Account.gql("WHERE user_id = :1", user_id_hash(self.user))
-            key = make_key(auth, acc_q.get())
+            acc = get_account(self.user)
+            key = make_key(auth, acc)
             self.set_authorized(True, key)
             self.response.write('/list')
         else:
-            acc_q = Account.gql("WHERE user_id = :1", user_id_hash(self.user))
+            acc = get_account(self.user)
             account_locked = False
-            for acc in acc_q:
+            if acc is not None:
                 if acc.number_failed_attempts is None:
                     acc.number_failed_attempts = 0
                 acc.number_failed_attempts += 1
@@ -516,6 +574,10 @@ class CheckMasterPass(BaseHandler):
 
 
 class MasterPassInitForm(BaseHandler):
+    """
+    Handler to generate the init master password form
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -530,6 +592,10 @@ class MasterPassInitForm(BaseHandler):
 
 
 class MasterPassChangeForm(BaseHandler):
+    """
+    Handler to generate the change master password form
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -540,6 +606,10 @@ class MasterPassChangeForm(BaseHandler):
 
 
 class InitMasterPass(BaseHandler):
+    """
+    Handler to init the master password
+    """
+
     def post(self):
         if not self.init_user():
             self.response.write("/welcome")
@@ -556,14 +626,14 @@ class InitMasterPass(BaseHandler):
         acc.user_id = user_id_hash(user)
         passwd = self.request.get('password')
         if passwd != self.request.get('password_repeat'):
-            self.response.write("/master_init_form?err=Passwords did not matcrypt.")
+            self.response.write("/master_init_form?err=Passwords did not match.")
             return
         strength, improvements = crypt.check_password_strength(passwd)
         iStrength = int(strength * 100.0)
 
         if iStrength < MIN_MASTER_PASS_STRENGTH and not DEVELOPER_MODE:
             self.response.write("/master_init_form?err=Password strength must be %d or higher. Yours scored %d." % (
-            MIN_MASTER_PASS_STRENGTH, iStrength))
+                MIN_MASTER_PASS_STRENGTH, iStrength))
         else:
             generate_pbkdf2_hash(acc, passwd)
             record_login(user, acc)
@@ -574,6 +644,10 @@ class InitMasterPass(BaseHandler):
 
 
 class ChangeMasterPass(BaseHandler):
+    """
+    Handler to change the master password
+    """
+
     def post(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -584,12 +658,11 @@ class ChangeMasterPass(BaseHandler):
             return
 
         user = users.get_current_user()
-        acc_q = Account.gql("WHERE user_id = :1", user_id_hash(user))
-        if acc_q.count() != 1:
+        acc = get_account(user)
+        if acc is None:
             self.response.write("/change_master_form?err=Problems accessing old password.")
             return
 
-        acc = acc_q.get()
         if acc.account_lock_hash != None:
             self.response.write("/change_master_form?err=Account is locked.")
             return
@@ -614,9 +687,9 @@ class ChangeMasterPass(BaseHandler):
         else:
             # decrypt all entries and store them again with new key.
             old_key = self.get_key()
-            old_cipher = crypt.create_cipher(old_key)
+            old_cipher = get_cipher(old_key)
             new_key = init_key(passwd, acc)
-            new_cipher = crypt.create_cipher(new_key)
+            new_cipher = get_cipher(new_key)
 
             entries = Entry.gql("WHERE user_id = :1", user_id_hash(user))
 
@@ -637,6 +710,10 @@ class ChangeMasterPass(BaseHandler):
 
 
 class End(BaseHandler):
+    """
+    Handler to end the session
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -648,11 +725,19 @@ class End(BaseHandler):
 
 
 class ViewList(BaseHandler):
+    """
+    Handler to view password entry list
+    """
+
     def get(self):
         self.view_list()
 
 
 class SearchForm(BaseHandler):
+    """
+    Handler to generate search form
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -661,6 +746,10 @@ class SearchForm(BaseHandler):
 
 
 class SearchList(BaseHandler):
+    """
+    Handler parse post from search form and deliver list of results
+    """
+
     def post(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -681,7 +770,7 @@ class SearchList(BaseHandler):
 
         query = self.request.get('query').upper()
         aes_key = self.get_key()
-        cipher = crypt.create_cipher(aes_key)
+        cipher = get_cipher(aes_key)
 
         for entry in entries:
             entry.site = crypt.decode(entry.site, cipher)
@@ -702,6 +791,10 @@ class SearchList(BaseHandler):
 
 
 class ViewEntry(BaseHandler):
+    """
+    Handler view an Entry by id
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -717,6 +810,10 @@ class ViewEntry(BaseHandler):
 
 
 class FormEditor(BaseHandler):
+    """
+    Handler view an editable Entry by id
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -741,6 +838,10 @@ class FormEditor(BaseHandler):
 
 
 class Create(BaseHandler):
+    """
+    Handler create form for a new Entry
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -754,6 +855,10 @@ class Create(BaseHandler):
 
 
 class Update(BaseHandler):
+    """
+    Handler update or create a new Entry from the html form.
+    """
+
     def post(self):
         user = users.get_current_user()
         if not user:
@@ -782,6 +887,10 @@ class Update(BaseHandler):
 
 
 class Delete(BaseHandler):
+    """
+    Handler delete an Entry by key id.
+    """
+
     def get(self):
         if self.is_not_authorized():
             return
@@ -795,6 +904,10 @@ class Delete(BaseHandler):
 
 
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+    """
+    Handler upload and import CSV file
+    """
+
     def clean_up(self):
         upload_files = self.get_uploads('files[]')
         for info in upload_files:
@@ -828,7 +941,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             self.clean_up()
             return
 
-        cipher = crypt.create_cipher(aes_key)
+        cipher = get_cipher(aes_key)
 
         reader = blobstore.BlobReader(file_info)
         csv_reader = csv.reader(reader, dialect=csv.excel)
@@ -959,6 +1072,10 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
 
 
 class Tools(BaseHandler):
+    """
+    Handler to render the tools menu page
+    """
+
     def get(self):
         if self.is_not_authorized():
             self.response.write("Not authorized.")
@@ -971,6 +1088,10 @@ class Tools(BaseHandler):
 
 
 class CleanConfirm(BaseHandler):
+    """
+    Handler render confirm delete all page
+    """
+
     def get(self):
         if self.is_not_authorized():
             return
@@ -979,6 +1100,10 @@ class CleanConfirm(BaseHandler):
 
 
 class Clean(BaseHandler):
+    """
+    Handler delete all user data
+    """
+
     def get(self):
         if self.is_not_authorized():
             self.response.write("Not authorized.")
@@ -997,6 +1122,10 @@ class Clean(BaseHandler):
 
 
 class CleanAll(BaseHandler):
+    """
+    Handler delete all data
+    """
+
     def get(self):
         if not DEVELOPER_MODE:
             self.response.write("Not authorized.")
@@ -1007,12 +1136,19 @@ class CleanAll(BaseHandler):
         entries = Account.query()
         for e in entries:
             e.key.delete()
+        entries = Login.query()
+        for e in entries:
+            e.key.delete()
         for b in blobstore.BlobInfo.all():
             blobstore.delete(b.key())
         self.response.write("all erased.")
 
 
 class Import(BaseHandler):
+    """
+    Handler to render import CSV form
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -1026,6 +1162,10 @@ class Import(BaseHandler):
 
 
 class Export(BaseHandler):
+    """
+    Handler to download CSV data of all password entries
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -1040,7 +1180,7 @@ class Export(BaseHandler):
             self.response.write("Not authorized.")
             return
 
-        cipher = crypt.create_cipher(aes_key)
+        cipher = get_cipher(aes_key)
         entries = Entry.gql("WHERE user_id = :1", user_id_hash(self.user))
 
         # just decode the sites for now. That's all we can see in the list
@@ -1058,38 +1198,56 @@ class Export(BaseHandler):
 
 
 class About(BaseHandler):
+    """
+    Handler to render details about encryption and storage methods
+    """
+
     def get(self):
         self.render({"APP_EMAIL_HELP": APP_EMAIL_HELP}, self.template('about.html'))
 
 
 class Terms(BaseHandler):
+    """
+    Handler to legal terms for use of site
+    """
+
     def get(self):
         self.render({}, self.template('terms.html'))
 
 
 class Locked(BaseHandler):
+    """
+    Handler to render locked screen when a user has failed too many password attempts
+    """
+
     def get(self):
         self.render({}, self.template('locked.html'))
 
 
-class Start(BaseHandler):
-    def get(self):
-        self.redirect("/")
-
-
 class Welcome(BaseHandler):
+    """
+    Handler to render screen when user not logged into google
+    """
+
     def get(self):
-        base_url = "/"
-        login_url = users.create_login_url(base_url)
-        self.render({"login_url": login_url}, self.template('welcome.html'))
+        self.view_welcome()
 
 
 class Donate(BaseHandler):
+    """
+    Handler to render donation form
+    """
+
     def get(self):
-        self.render({"APP_EMAIL_HELP": APP_EMAIL_HELP}, self.template('donate.html'))
+        self.render({"APP_EMAIL_HELP": APP_EMAIL_HELP,
+                     "SITE_ROOT": SITE_ROOT}, self.template('donate.html'))
 
 
 class OnDonated(BaseHandler):
+    """
+    Handler called by paypal when donation was made. Not viewable by users.
+    """
+
     def post(self):
         body = "A donation was made. \n"
         body += "url: %s \n" % self.request.url
@@ -1099,11 +1257,19 @@ class OnDonated(BaseHandler):
 
 
 class Thanks(BaseHandler):
+    """
+    Handler called by paypal when donation was made. Viewable by users.
+    """
+
     def get(self):
         self.render({"APP_EMAIL_HELP": APP_EMAIL_HELP}, self.template('thanks.html'))
 
 
 class PasswordStrength(BaseHandler):
+    """
+    Handler to test the password strength
+    """
+
     def post(self):
         passwd = self.request.get('password')
         strength, improvements = crypt.check_password_strength(passwd)
@@ -1132,6 +1298,10 @@ class PasswordStrength(BaseHandler):
 
 
 class Unlock(BaseHandler):
+    """
+    Handler to attempt to unlock a user account that has failed too many passsword attempts
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -1141,13 +1311,18 @@ class Unlock(BaseHandler):
         num_failed_attempts = attempt_unlock(self.user, auth)
 
         if num_failed_attempts >= 0:
-            self.render({'num_failed_attempts': num_failed_attempts}, self.template('unlocked.html'))
+            self.render({'num_failed_attempts': num_failed_attempts,
+                         "APP_EMAIL_HELP": APP_EMAIL_HELP}, self.template('unlocked.html'))
         else:
             logging.error('user: %s failed to unlock their account.' % (str(self.user)))
             self.redirect("/")
 
 
 class Raw(BaseHandler):
+    """
+    Handler to view all the data stored in the raw
+    """
+
     def get(self):
         if not self.init_user():
             self.redirect("/welcome")
@@ -1163,8 +1338,7 @@ class Raw(BaseHandler):
             entries = []
 
         try:
-            accounts_arr = Account.gql("WHERE user_id = :1", user_id_hash(self.user))
-            account = accounts_arr.get()
+            account = get_account(self.user)
         except:
             account = None
 
@@ -1184,12 +1358,20 @@ class Raw(BaseHandler):
 
 
 class Admin(BaseHandler):
+    """
+    Handler to view accounts overview
+    """
+
     def get(self):
         logins = Login.query()
         self.render({"logins": logins}, self.template('admin.html'))
 
 
 class Migrate(BaseHandler):
+    """
+    Handler to run data schema changes
+    """
+
     def get(self):
         """
         Do some data migration here.
@@ -1198,11 +1380,33 @@ class Migrate(BaseHandler):
 
 
 class LoginStateCheck(BaseHandler):
+    """
+    Handler to check the user login state
+    """
+
     def get(self):
         if not self.init_user() or self.is_not_authorized():
             self.response.write("0")
             return
         self.response.write("1")
+
+
+class LetsEncryptHandler(BaseHandler):
+    """
+    This handler is used when authenticating this domain with the LetsEncrypt SSL cert authority
+    https://letsencrypt.org/
+
+    Here's a handy set of instructions on setting up ssl cert in app-engine
+    http://blog.seafuj.com/lets-encrypt-on-google-app-engine
+    """
+
+    def get(self, challenge):
+        self.response.headers['Content-Type'] = 'text/plain'
+        responses = {
+            'challenge1': 'response1',
+            'challenge2': 'response2'
+        }
+        self.response.write(responses.get(challenge, ''))
 
 
 config = {}
@@ -1248,12 +1452,12 @@ app = webapp2.WSGIApplication([
     ('/raw', Raw),
     ('/terms', Terms),
     ('/welcome', Welcome),
-    ('/start', Start),
     ('/password_strength', PasswordStrength),
     ('/donate', Donate),
     ('/donated', OnDonated),
     ('/thanks', Thanks),
     ('/admin', Admin),
     ('/migrate', Migrate),
+    ('/.well-known/acme-challenge/([\w-]+)', LetsEncryptHandler),
 ], debug=DEVELOPER_MODE, config=config)
 # [END app]

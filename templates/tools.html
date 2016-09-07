@@ -11,9 +11,6 @@
                 </div>
                 <div align="center">
                     <div class="ui-body ui-body-a">
-                        <p>Help keep the lights on.</p>
-                        <a onclick="ajax_load('/donate')" class="btn btn-lg btn-primary">Donate</a>
-                        <hr>
                         <p>Read password data from a comma seperated file.</p>
                         <a onclick="ajax_load('/import')" class="btn btn-lg btn-primary">Import</a>
                         <hr>
@@ -26,6 +23,17 @@
                         <p> Change the master password.</p>
                         <a onclick="ajax_load('/change_master_form')" class="btn btn-lg btn-primary">Change Master
                             Pass</a>
+                        <hr>
+                        <p>Like to contribute?</p>
+                        <div class="padded">
+                            <div class="col-sm-3 col-sm-offset-3">
+                                <a onclick="ajax_load('/donate')" class="btn btn-lg btn-primary">Donate</a>
+                            </div>
+                            <div class="col-sm-3">
+                                <a href="https://github.com/PrettyGoodPasswords/prettygoodpasswords_gae"
+                                   class="btn btn-lg btn-primary">Code</a>
+                            </div>
+                        </div>
                         {%- if admin == 1 -%}
                         <hr>
                         <p class="detail-text"> Admin.</p>

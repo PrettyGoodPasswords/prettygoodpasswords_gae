@@ -11,7 +11,7 @@
                 Entries are stored in App Engine (NoSQL) High Replication Datastore (HRD).
             </p>
             <p>
-                No data is stored in the clear. We transform your master password with a mathematical hash, called
+                We transform your master password with a mathematical hash, called
                 PBKDF2, and store the result. Each time you enter your master password, check that the transformation
                 results in the same value. Thus we don't
                 save and can't recover your master password. Working backwards to discover your password from this hash
@@ -32,7 +32,7 @@
                 100000 iterations. PBKDF2, which stands for Password-Based Key Derivation Function, version 2. If you
                 are curious how it works
                 you can peruse <a href="http://tools.ietf.org/html/rfc2898#section-5.2">section 5.2 of RFC 2898</a>.
-                All site, username, password, and note data is AES encoded with that private key.
+                All site, username, password, and note data is AES encoded with that 256 bit private key.
                 The key exists transitionally in a secure, server side session and is discarded when the user logs out
                 or time expires.
             </p>
@@ -53,6 +53,9 @@
             <p>
                 Always take care when accessing this on a public computer. Preferably, do not. And do not use two factor
                 to authenticate a public device.
+            </p>
+            <p>
+                The source is available on <a href="https://github.com/PrettyGoodPasswords/prettygoodpasswords_gae">GitHub</a>.
             </p>
             <hr/>
             <p> Please <a href="mailto:{{APP_EMAIL_HELP}}"/>email PGP Help</a> if you have any questions or comments.
