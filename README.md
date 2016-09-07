@@ -3,12 +3,14 @@
 PrettyGoodPasswords is an application using Google App
 Engine. Users can read & write password entries safely and securely. 
 Entries are stored in App Engine (NoSQL) High Replication Datastore (HRD).
-No data is stored in the clear. The master password is stored hashed with
-PBKDF2 after adding random salt.
+The master password is hashed with PBKDF2 and a cost factor of 100000.
 The private key is generated from PBKDF2 using the master password+salt and
 100000 iterations. All site, username, password, and note data is AES encoded
 with that private key. The key is kept in a secure, server side session and is
 discarded when the user logs out or time expires.
+
+## Site
+- [PrettyGoodPasswords][9]
 
 ## Products
 - [App Engine][1]
@@ -34,4 +36,5 @@ discarded when the user logs out or time expires.
 [6]: http://jinja.pocoo.org/docs/
 [7]: http://twitter.github.com/bootstrap/
 [8]: https://pypi.python.org/pypi/pycrypto
+[9]: https://prettygoodpasswords.com
 
